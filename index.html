@@ -1,0 +1,1359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SFDC Admin Master Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sf-blue: #0070D2;
+    --sf-dark: #032D60;
+    --sf-navy: #001639;
+    --sf-light: #E8F4FD;
+    --sf-accent: #00A1E0;
+    --sf-gold: #FFB75D;
+    --sf-green: #2ECC71;
+    --sf-red: #E74C3C;
+    --sf-purple: #7B68EE;
+    --bg: #F5F8FF;
+    --card: #FFFFFF;
+    --text: #032D60;
+    --text-light: #5A6A7A;
+    --border: #D0E3F5;
+    --mono: 'Space Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+    --display: 'Playfair Display', serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    position: fixed; left: 0; top: 0; bottom: 0;
+    width: 280px; background: var(--sf-navy);
+    overflow-y: auto; z-index: 100;
+    display: flex; flex-direction: column;
+    border-right: 1px solid rgba(255,255,255,0.07);
+  }
+
+  .sidebar-header {
+    padding: 28px 24px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .sidebar-logo {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--sf-gold);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .sidebar-title {
+    font-family: var(--display);
+    font-size: 22px;
+    color: #fff;
+    line-height: 1.2;
+  }
+
+  .sidebar-subtitle {
+    font-size: 11px;
+    color: rgba(255,255,255,0.4);
+    margin-top: 4px;
+    font-family: var(--mono);
+  }
+
+  .sidebar-search {
+    padding: 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .search-input {
+    width: 100%;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px;
+    padding: 9px 14px;
+    color: #fff;
+    font-family: var(--sans);
+    font-size: 13px;
+    outline: none;
+    transition: all 0.2s;
+  }
+
+  .search-input::placeholder { color: rgba(255,255,255,0.3); }
+  .search-input:focus { border-color: var(--sf-accent); background: rgba(255,255,255,0.1); }
+
+  .nav-section-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: rgba(255,255,255,0.25);
+    text-transform: uppercase;
+    padding: 18px 20px 8px;
+  }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+    transition: all 0.2s;
+    font-size: 13.5px;
+    color: rgba(255,255,255,0.6);
+    text-decoration: none;
+  }
+
+  .nav-item:hover { background: rgba(255,255,255,0.05); color: #fff; border-left-color: rgba(0,161,224,0.4); }
+  .nav-item.active { background: rgba(0,112,210,0.2); color: #fff; border-left-color: var(--sf-accent); font-weight: 600; }
+
+  .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+  .nav-badge { margin-left: auto; background: rgba(0,161,224,0.2); color: var(--sf-accent); font-size: 10px; font-family: var(--mono); padding: 2px 7px; border-radius: 20px; }
+
+  .progress-section {
+    padding: 16px 20px;
+    margin-top: auto;
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .progress-label { font-size: 11px; color: rgba(255,255,255,0.4); margin-bottom: 8px; font-family: var(--mono); }
+  .progress-bar { background: rgba(255,255,255,0.1); border-radius: 10px; height: 5px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--sf-accent), var(--sf-gold)); border-radius: 10px; transition: width 0.5s ease; }
+  .progress-text { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 6px; }
+
+  /* MAIN */
+  .main { margin-left: 280px; min-height: 100vh; }
+
+  .topbar {
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    padding: 0 40px;
+    height: 64px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 50;
+    box-shadow: 0 1px 12px rgba(0,0,0,0.05);
+  }
+
+  .topbar-title { font-size: 15px; font-weight: 600; color: var(--sf-dark); }
+  .topbar-breadcrumb { font-size: 12px; color: var(--text-light); font-family: var(--mono); }
+
+  .topbar-actions { display: flex; gap: 10px; align-items: center; }
+
+  .btn {
+    padding: 8px 18px; border-radius: 8px; font-size: 13px;
+    font-family: var(--sans); font-weight: 600; cursor: pointer;
+    border: none; transition: all 0.2s;
+  }
+
+  .btn-primary { background: var(--sf-blue); color: white; }
+  .btn-primary:hover { background: var(--sf-dark); transform: translateY(-1px); }
+  .btn-ghost { background: transparent; color: var(--sf-blue); border: 1.5px solid var(--border); }
+  .btn-ghost:hover { background: var(--sf-light); }
+
+  .content { padding: 40px; }
+
+  /* HOME VIEW */
+  .hero {
+    background: linear-gradient(135deg, var(--sf-dark) 0%, var(--sf-blue) 60%, var(--sf-accent) 100%);
+    border-radius: 20px;
+    padding: 50px;
+    color: white;
+    margin-bottom: 36px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute; top: -50px; right: -50px;
+    width: 300px; height: 300px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 50%;
+  }
+
+  .hero::after {
+    content: '';
+    position: absolute; bottom: -80px; right: 100px;
+    width: 200px; height: 200px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 50%;
+  }
+
+  .hero-tag { font-family: var(--mono); font-size: 11px; letter-spacing: 3px; color: var(--sf-gold); margin-bottom: 14px; }
+  .hero-title { font-family: var(--display); font-size: 42px; line-height: 1.15; margin-bottom: 14px; }
+  .hero-sub { font-size: 15px; color: rgba(255,255,255,0.7); max-width: 500px; line-height: 1.7; }
+
+  .stats-row {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;
+    margin-bottom: 36px;
+  }
+
+  .stat-card {
+    background: var(--card); border-radius: 14px;
+    padding: 22px; border: 1px solid var(--border);
+    transition: all 0.2s;
+  }
+
+  .stat-card:hover { box-shadow: 0 4px 20px rgba(0,112,210,0.1); transform: translateY(-2px); }
+  .stat-number { font-family: var(--mono); font-size: 32px; font-weight: 700; color: var(--sf-blue); }
+  .stat-label { font-size: 12px; color: var(--text-light); margin-top: 4px; }
+
+  /* TOPIC CARDS GRID */
+  .section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 22px;
+  }
+
+  .section-title { font-size: 20px; font-weight: 700; color: var(--sf-dark); }
+  .section-tag { font-family: var(--mono); font-size: 10px; letter-spacing: 2px; color: var(--text-light); text-transform: uppercase; }
+
+  .topics-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
+    margin-bottom: 40px;
+  }
+
+  .topic-card {
+    background: var(--card); border-radius: 16px;
+    border: 1.5px solid var(--border);
+    padding: 28px;
+    cursor: pointer;
+    transition: all 0.25s;
+    position: relative; overflow: hidden;
+  }
+
+  .topic-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: var(--accent-color, var(--sf-blue));
+    transform: scaleX(0);
+    transition: transform 0.3s;
+  }
+
+  .topic-card:hover { box-shadow: 0 8px 30px rgba(0,112,210,0.12); transform: translateY(-3px); border-color: var(--sf-accent); }
+  .topic-card:hover::before { transform: scaleX(1); }
+
+  .topic-icon { font-size: 32px; margin-bottom: 14px; display: block; }
+  .topic-name { font-size: 16px; font-weight: 700; color: var(--sf-dark); margin-bottom: 6px; }
+  .topic-desc { font-size: 12.5px; color: var(--text-light); line-height: 1.6; }
+  .topic-count { font-family: var(--mono); font-size: 11px; color: var(--sf-accent); margin-top: 14px; }
+
+  /* DETAIL VIEW */
+  .detail-view { display: none; }
+
+  .detail-header {
+    background: var(--card); border-radius: 16px;
+    border: 1px solid var(--border);
+    padding: 36px; margin-bottom: 28px;
+  }
+
+  .detail-back {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 13px; color: var(--sf-blue); cursor: pointer;
+    margin-bottom: 20px; font-weight: 600;
+    background: none; border: none;
+  }
+
+  .detail-back:hover { color: var(--sf-dark); }
+
+  .detail-title { font-family: var(--display); font-size: 34px; color: var(--sf-dark); margin-bottom: 8px; }
+  .detail-subtitle { color: var(--text-light); font-size: 14px; line-height: 1.6; }
+
+  /* CONCEPT BLOCKS */
+  .concept-block {
+    background: var(--card); border-radius: 14px;
+    border: 1px solid var(--border);
+    margin-bottom: 20px; overflow: hidden;
+  }
+
+  .concept-header {
+    padding: 20px 24px;
+    display: flex; align-items: center; justify-content: space-between;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .concept-header:hover { background: var(--sf-light); }
+
+  .concept-title-wrap { display: flex; align-items: center; gap: 12px; }
+  .concept-num { font-family: var(--mono); font-size: 11px; color: var(--sf-accent); background: var(--sf-light); padding: 3px 10px; border-radius: 20px; }
+  .concept-name { font-size: 15px; font-weight: 700; color: var(--sf-dark); }
+  .concept-arrow { font-size: 18px; color: var(--text-light); transition: transform 0.3s; }
+  .concept-block.open .concept-arrow { transform: rotate(180deg); }
+
+  .concept-body {
+    display: none;
+    padding: 0 24px 24px;
+    border-top: 1px solid var(--border);
+  }
+
+  .concept-block.open .concept-body { display: block; }
+
+  .concept-intro { font-size: 14px; color: var(--text-light); line-height: 1.75; padding: 18px 0 14px; }
+
+  /* DEFINITION TABLE */
+  .def-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13.5px; }
+  .def-table th { background: var(--sf-dark); color: white; padding: 10px 16px; text-align: left; font-weight: 600; font-size: 12px; }
+  .def-table th:first-child { border-radius: 8px 0 0 0; }
+  .def-table th:last-child { border-radius: 0 8px 0 0; }
+  .def-table td { padding: 10px 16px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .def-table tr:nth-child(even) td { background: #F8FBFF; }
+  .def-table tr:last-child td { border-bottom: none; }
+  .def-table td:first-child { font-weight: 600; color: var(--sf-blue); white-space: nowrap; }
+
+  /* NOTE BOX */
+  .note-box {
+    background: #EBF8FF; border-left: 4px solid var(--sf-accent);
+    border-radius: 0 10px 10px 0;
+    padding: 14px 18px; margin: 16px 0;
+    font-size: 13px; color: var(--sf-dark); line-height: 1.7;
+  }
+
+  .note-box strong { color: var(--sf-blue); }
+
+  .warn-box {
+    background: #FFF8E7; border-left: 4px solid var(--sf-gold);
+    border-radius: 0 10px 10px 0;
+    padding: 14px 18px; margin: 16px 0;
+    font-size: 13px; color: #7A5500; line-height: 1.7;
+  }
+
+  .tip-box {
+    background: #EAFAF1; border-left: 4px solid var(--sf-green);
+    border-radius: 0 10px 10px 0;
+    padding: 14px 18px; margin: 16px 0;
+    font-size: 13px; color: #1A5E35; line-height: 1.7;
+  }
+
+  /* TAGS */
+  .tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
+  .tag { font-size: 11px; font-family: var(--mono); padding: 4px 12px; border-radius: 20px; }
+  .tag-blue { background: #E0F0FF; color: var(--sf-blue); }
+  .tag-green { background: #E0FAF0; color: #1B6B40; }
+  .tag-orange { background: #FFF0DC; color: #8B5500; }
+  .tag-red { background: #FFE8E8; color: #8B1A1A; }
+
+  /* QUIZ SECTION */
+  .quiz-block {
+    background: linear-gradient(135deg, var(--sf-navy), var(--sf-dark));
+    border-radius: 14px; padding: 28px;
+    color: white; margin: 20px 0;
+  }
+
+  .quiz-title { font-family: var(--mono); font-size: 11px; letter-spacing: 2px; color: var(--sf-gold); margin-bottom: 14px; }
+  .quiz-question { font-size: 16px; font-weight: 600; margin-bottom: 20px; line-height: 1.5; }
+
+  .quiz-options { display: flex; flex-direction: column; gap: 10px; }
+
+  .quiz-option {
+    background: rgba(255,255,255,0.07);
+    border: 1.5px solid rgba(255,255,255,0.15);
+    border-radius: 10px; padding: 12px 18px;
+    cursor: pointer; font-size: 14px;
+    transition: all 0.2s; text-align: left;
+    color: white; font-family: var(--sans);
+  }
+
+  .quiz-option:hover { background: rgba(255,255,255,0.13); border-color: var(--sf-accent); }
+  .quiz-option.correct { background: rgba(46,204,113,0.2); border-color: var(--sf-green); }
+  .quiz-option.wrong { background: rgba(231,76,60,0.2); border-color: var(--sf-red); }
+
+  .quiz-result { margin-top: 16px; padding: 14px; border-radius: 10px; font-size: 14px; display: none; }
+  .quiz-result.show { display: block; }
+  .quiz-result.correct-result { background: rgba(46,204,113,0.15); color: #7EFEC0; }
+  .quiz-result.wrong-result { background: rgba(231,76,60,0.15); color: #FFB3B3; }
+
+  /* SEARCH RESULTS */
+  .search-results {
+    background: var(--card); border-radius: 14px;
+    border: 1px solid var(--border);
+    padding: 28px;
+  }
+
+  .search-result-item {
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+  }
+
+  .search-result-item:last-child { border-bottom: none; }
+  .search-result-item:hover .search-result-title { color: var(--sf-blue); }
+  .search-result-title { font-size: 15px; font-weight: 600; color: var(--sf-dark); margin-bottom: 4px; }
+  .search-result-path { font-size: 11px; font-family: var(--mono); color: var(--sf-accent); margin-bottom: 6px; }
+  .search-result-snippet { font-size: 13px; color: var(--text-light); line-height: 1.6; }
+  .search-result-snippet mark { background: #FFF176; color: inherit; border-radius: 2px; padding: 0 2px; }
+
+  /* CHEATSHEET */
+  .cheat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .cheat-card {
+    background: var(--card); border-radius: 12px; border: 1px solid var(--border);
+    padding: 20px;
+  }
+  .cheat-card-title { font-size: 13px; font-weight: 700; color: var(--sf-dark); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .cheat-item { font-size: 12.5px; color: var(--text-light); padding: 5px 0; border-bottom: 1px dashed var(--border); display: flex; gap: 8px; }
+  .cheat-item:last-child { border-bottom: none; }
+  .cheat-key { font-family: var(--mono); color: var(--sf-blue); font-size: 11px; min-width: 120px; }
+
+  /* TABS */
+  .tabs { display: flex; gap: 4px; margin-bottom: 24px; background: var(--sf-light); border-radius: 10px; padding: 4px; }
+  .tab-btn {
+    padding: 9px 20px; border-radius: 7px; font-size: 13px; font-weight: 600;
+    cursor: pointer; border: none; background: transparent; color: var(--text-light);
+    transition: all 0.2s; font-family: var(--sans);
+  }
+  .tab-btn.active { background: white; color: var(--sf-blue); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+
+  /* VIEW MANAGEMENT */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  .animate { animation: fadeUp 0.4s ease forwards; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(0,112,210,0.2); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(0,112,210,0.4); }
+
+  .completed-badge { display: inline-flex; align-items: center; gap: 4px; background: #EAFAF1; color: #1B6B40; font-size: 11px; font-family: var(--mono); padding: 3px 10px; border-radius: 20px; margin-left: 10px; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">Trailhead — Admin</div>
+    <div class="sidebar-title">Master Hub</div>
+    <div class="sidebar-subtitle">Complete Reference Guide</div>
+  </div>
+
+  <div class="sidebar-search">
+    <input class="search-input" type="text" placeholder="🔍  Search any concept..." id="globalSearch" oninput="handleSearch(this.value)">
+  </div>
+
+  <div class="nav-section-label">Navigation</div>
+  <a class="nav-item active" onclick="showView('home')" id="nav-home">
+    <span class="nav-icon">🏠</span> Home
+  </a>
+  <a class="nav-item" onclick="showView('cheatsheet')" id="nav-cheatsheet">
+    <span class="nav-icon">⚡</span> Quick Cheat Sheet
+  </a>
+
+  <div class="nav-section-label">Core Modules</div>
+  <a class="nav-item" onclick="showTopic('platform')" id="nav-platform">
+    <span class="nav-icon">☁️</span> Platform Basics <span class="nav-badge">8</span>
+  </a>
+  <a class="nav-item" onclick="showTopic('datamodel')" id="nav-datamodel">
+    <span class="nav-icon">🗄️</span> Data Model <span class="nav-badge">10</span>
+  </a>
+  <a class="nav-item" onclick="showTopic('security')" id="nav-security">
+    <span class="nav-icon">🔐</span> Security & Access <span class="nav-badge">9</span>
+  </a>
+  <a class="nav-item" onclick="showTopic('automation')" id="nav-automation">
+    <span class="nav-icon">⚙️</span> Automation <span class="nav-badge">8</span>
+  </a>
+  <a class="nav-item" onclick="showTopic('validation')" id="nav-validation">
+    <span class="nav-icon">✅</span> Validation & Formula <span class="nav-badge">6</span>
+  </a>
+  <a class="nav-item" onclick="showTopic('reports')" id="nav-reports">
+    <span class="nav-icon">📊</span> Reports & Dashboards <span class="nav-badge">7</span>
+  </a>
+  <a class="nav-item" onclick="showTopic('sales')" id="nav-sales">
+    <span class="nav-icon">💼</span> Sales Cloud <span class="nav-badge">8</span>
+  </a>
+  <a class="nav-item" onclick="showTopic('service')" id="nav-service">
+    <span class="nav-icon">🎧</span> Service Cloud <span class="nav-badge">7</span>
+  </a>
+  <a class="nav-item" onclick="showTopic('datamanagement')" id="nav-datamanagement">
+    <span class="nav-icon">📦</span> Data Management <span class="nav-badge">6</span>
+  </a>
+  <a class="nav-item" onclick="showTopic('appbuilder')" id="nav-appbuilder">
+    <span class="nav-icon">🧩</span> App Builder & UI <span class="nav-badge">7</span>
+  </a>
+
+  <div class="progress-section">
+    <div class="progress-label">Study Progress</div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    <div class="progress-text" id="progressText">0 / 10 topics visited</div>
+  </div>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main class="main">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title" id="topbarTitle">SFDC Admin Master Hub</div>
+      <div class="topbar-breadcrumb" id="topbarCrumb">Home → Overview</div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn btn-ghost" onclick="showView('cheatsheet')">⚡ Cheat Sheet</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- HOME VIEW -->
+    <div id="view-home" class="view active">
+      <div class="hero animate">
+        <div class="hero-tag">☁️ Salesforce Admin · Complete Reference</div>
+        <div class="hero-title">Your Single Stop<br>SFDC Admin Hub</div>
+        <div class="hero-sub">Every concept, every definition, every relationship — explained in depth with examples, tips, and quick quizzes.</div>
+      </div>
+
+      <div class="stats-row animate">
+        <div class="stat-card"><div class="stat-number">10</div><div class="stat-label">Core Modules</div></div>
+        <div class="stat-card"><div class="stat-number">76</div><div class="stat-label">Concepts Covered</div></div>
+        <div class="stat-card"><div class="stat-number">10</div><div class="stat-label">Practice Quizzes</div></div>
+        <div class="stat-card"><div class="stat-number">100%</div><div class="stat-label">Admin Trail Coverage</div></div>
+      </div>
+
+      <div class="section-header">
+        <div class="section-title">All Topics</div>
+        <div class="section-tag">Click any card to deep dive</div>
+      </div>
+
+      <div class="topics-grid animate">
+        <div class="topic-card" onclick="showTopic('platform')" style="--accent-color:#0070D2">
+          <span class="topic-icon">☁️</span>
+          <div class="topic-name">Platform Basics</div>
+          <div class="topic-desc">Salesforce architecture, products, orgs, terminology and the core platform concepts every admin must know.</div>
+          <div class="topic-count">8 concepts →</div>
+        </div>
+        <div class="topic-card" onclick="showTopic('datamodel')" style="--accent-color:#7B68EE">
+          <span class="topic-icon">🗄️</span>
+          <div class="topic-name">Data Model</div>
+          <div class="topic-desc">Objects, fields, relationships, schema builder — the foundation of everything in Salesforce.</div>
+          <div class="topic-count">10 concepts →</div>
+        </div>
+        <div class="topic-card" onclick="showTopic('security')" style="--accent-color:#E74C3C">
+          <span class="topic-icon">🔐</span>
+          <div class="topic-name">Security & Access</div>
+          <div class="topic-desc">Profiles, Permission Sets, Roles, OWD, Sharing Rules — the complete security model in depth.</div>
+          <div class="topic-count">9 concepts →</div>
+        </div>
+        <div class="topic-card" onclick="showTopic('automation')" style="--accent-color:#F39C12">
+          <span class="topic-icon">⚙️</span>
+          <div class="topic-name">Automation</div>
+          <div class="topic-desc">Flow Builder, Process Builder, Workflow Rules — when to use which, and how they work.</div>
+          <div class="topic-count">8 concepts →</div>
+        </div>
+        <div class="topic-card" onclick="showTopic('validation')" style="--accent-color:#2ECC71">
+          <span class="topic-icon">✅</span>
+          <div class="topic-name">Validation & Formula</div>
+          <div class="topic-desc">Validation rules, formula fields, functions and syntax — ensure data quality across your org.</div>
+          <div class="topic-count">6 concepts →</div>
+        </div>
+        <div class="topic-card" onclick="showTopic('reports')" style="--accent-color:#00A1E0">
+          <span class="topic-icon">📊</span>
+          <div class="topic-name">Reports & Dashboards</div>
+          <div class="topic-desc">All report types, dashboard components, filters, bucket fields and dynamic dashboards.</div>
+          <div class="topic-count">7 concepts →</div>
+        </div>
+        <div class="topic-card" onclick="showTopic('sales')" style="--accent-color:#1ABC9C">
+          <span class="topic-icon">💼</span>
+          <div class="topic-name">Sales Cloud</div>
+          <div class="topic-desc">Leads, Opportunities, Accounts, Contacts, Activities, Products, Price Books and the full sales cycle.</div>
+          <div class="topic-count">8 concepts →</div>
+        </div>
+        <div class="topic-card" onclick="showTopic('service')" style="--accent-color:#9B59B6">
+          <span class="topic-icon">🎧</span>
+          <div class="topic-name">Service Cloud</div>
+          <div class="topic-desc">Cases, Queues, Assignment Rules, Escalation Rules, Knowledge, Entitlements, and Omni-Channel.</div>
+          <div class="topic-count">7 concepts →</div>
+        </div>
+        <div class="topic-card" onclick="showTopic('datamanagement')" style="--accent-color:#E67E22">
+          <span class="topic-icon">📦</span>
+          <div class="topic-name">Data Management</div>
+          <div class="topic-desc">Import Wizard, Data Loader, Data Export, Duplicate Rules and best practices for clean data.</div>
+          <div class="topic-count">6 concepts →</div>
+        </div>
+        <div class="topic-card" onclick="showTopic('appbuilder')" style="--accent-color:#16A085">
+          <span class="topic-icon">🧩</span>
+          <div class="topic-name">App Builder & UI</div>
+          <div class="topic-desc">Lightning App Builder, Page Layouts, List Views, Quick Actions, Compact Layouts and App customization.</div>
+          <div class="topic-count">7 concepts →</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOPIC DETAIL VIEW -->
+    <div id="view-topic" class="view">
+      <div id="topicContent"></div>
+    </div>
+
+    <!-- CHEAT SHEET VIEW -->
+    <div id="view-cheatsheet" class="view">
+      <div class="detail-header">
+        <div class="detail-title">⚡ Quick Cheat Sheet</div>
+        <div class="detail-subtitle">The most important facts, limits, and distinctions — all in one place for fast revision.</div>
+      </div>
+      <div class="cheat-grid">
+        <div class="cheat-card">
+          <div class="cheat-card-title">🔐 Security Distinctions</div>
+          <div class="cheat-item"><span class="cheat-key">Profile</span> Controls WHAT you can do (CRUD)</div>
+          <div class="cheat-item"><span class="cheat-key">Role</span> Controls WHAT you can see (records)</div>
+          <div class="cheat-item"><span class="cheat-key">Permission Set</span> Adds permissions on top of profile</div>
+          <div class="cheat-item"><span class="cheat-key">OWD</span> Baseline access — set most restrictive</div>
+          <div class="cheat-item"><span class="cheat-key">Sharing Rule</span> Opens access beyond hierarchy</div>
+        </div>
+        <div class="cheat-card">
+          <div class="cheat-card-title">🗄️ Relationship Types</div>
+          <div class="cheat-item"><span class="cheat-key">Master-Detail</span> Tight — child deleted with parent</div>
+          <div class="cheat-item"><span class="cheat-key">Lookup</span> Loose — child exists independently</div>
+          <div class="cheat-item"><span class="cheat-key">Many-to-Many</span> Via junction object</div>
+          <div class="cheat-item"><span class="cheat-key">Hierarchical</span> User object only</div>
+          <div class="cheat-item"><span class="cheat-key">Roll-Up Summary</span> Master-Detail only</div>
+        </div>
+        <div class="cheat-card">
+          <div class="cheat-card-title">📊 Report Types</div>
+          <div class="cheat-item"><span class="cheat-key">Tabular</span> Simple list, no grouping</div>
+          <div class="cheat-item"><span class="cheat-key">Summary</span> Group by rows</div>
+          <div class="cheat-item"><span class="cheat-key">Matrix</span> Group by rows AND columns</div>
+          <div class="cheat-item"><span class="cheat-key">Joined</span> Up to 5 blocks in one report</div>
+        </div>
+        <div class="cheat-card">
+          <div class="cheat-card-title">⚙️ Automation Tools</div>
+          <div class="cheat-item"><span class="cheat-key">Flow Builder</span> Current standard — use this</div>
+          <div class="cheat-item"><span class="cheat-key">Process Builder</span> Being retired → migrate to Flow</div>
+          <div class="cheat-item"><span class="cheat-key">Workflow Rules</span> Being retired → migrate to Flow</div>
+          <div class="cheat-item"><span class="cheat-key">Apex Triggers</span> Complex code-based logic</div>
+        </div>
+        <div class="cheat-card">
+          <div class="cheat-card-title">📦 Sandbox Types</div>
+          <div class="cheat-item"><span class="cheat-key">Developer</span> No data, refresh 1 day</div>
+          <div class="cheat-item"><span class="cheat-key">Developer Pro</span> More storage, refresh 1 day</div>
+          <div class="cheat-item"><span class="cheat-key">Partial Copy</span> Sample data, refresh 5 days</div>
+          <div class="cheat-item"><span class="cheat-key">Full</span> All data, refresh 29 days</div>
+        </div>
+        <div class="cheat-card">
+          <div class="cheat-card-title">⚠️ Key Limits</div>
+          <div class="cheat-item"><span class="cheat-key">MD Relationships</span> Max 2 per object</div>
+          <div class="cheat-item"><span class="cheat-key">Lookup Relationships</span> Max 40 per object</div>
+          <div class="cheat-item"><span class="cheat-key">Custom Fields</span> Up to 500 per object</div>
+          <div class="cheat-item"><span class="cheat-key">Dashboard Components</span> Max 20 per dashboard</div>
+          <div class="cheat-item"><span class="cheat-key">Cross-Object Formula</span> Max 10 levels deep</div>
+        </div>
+        <div class="cheat-card">
+          <div class="cheat-card-title">💼 Sales Cloud Flow</div>
+          <div class="cheat-item"><span class="cheat-key">Lead</span> Unqualified prospect</div>
+          <div class="cheat-item"><span class="cheat-key">Convert Lead</span> Creates Acct + Contact + Opp</div>
+          <div class="cheat-item"><span class="cheat-key">Opportunity</span> Potential deal with stages</div>
+          <div class="cheat-item"><span class="cheat-key">Account</span> Company / organisation</div>
+          <div class="cheat-item"><span class="cheat-key">Contact</span> Person at an account</div>
+        </div>
+        <div class="cheat-card">
+          <div class="cheat-card-title">🎧 Service Cloud Essentials</div>
+          <div class="cheat-item"><span class="cheat-key">Case</span> Core support request object</div>
+          <div class="cheat-item"><span class="cheat-key">Queue</span> Holds unassigned records</div>
+          <div class="cheat-item"><span class="cheat-key">Assignment Rule</span> Auto-routes cases</div>
+          <div class="cheat-item"><span class="cheat-key">Escalation Rule</span> Escalates unresolved cases</div>
+          <div class="cheat-item"><span class="cheat-key">Entitlement</span> Defines SLA for customer</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEARCH RESULTS VIEW -->
+    <div id="view-search" class="view">
+      <div class="search-results">
+        <div class="section-header">
+          <div class="section-title">Search Results</div>
+        </div>
+        <div id="searchResultsList"></div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+// ─── DATA ───────────────────────────────────────────────────────────────────
+
+const topicsData = {
+  platform: {
+    title: "Platform Basics",
+    icon: "☁️",
+    subtitle: "Understanding the Salesforce ecosystem, cloud products, and fundamental architecture.",
+    concepts: [
+      {
+        title: "What is Salesforce?",
+        content: `<p class="concept-intro">Salesforce is the world's #1 cloud-based Customer Relationship Management (CRM) platform. It helps businesses manage relationships with customers, partners, and prospects — all from a single platform, accessible from anywhere via a browser.</p>
+        <div class="note-box"><strong>Key Point:</strong> Salesforce is a SaaS (Software as a Service) — you don't install it, you access it via the cloud. This means automatic updates, no maintenance, and access from any device.</div>
+        <table class="def-table"><tr><th>Concept</th><th>Meaning</th></tr>
+        <tr><td>CRM</td><td>Customer Relationship Management — a system to manage all interactions with current and potential customers</td></tr>
+        <tr><td>SaaS</td><td>Software as a Service — software hosted in the cloud, accessible via browser, no installation needed</td></tr>
+        <tr><td>Multi-tenant</td><td>Multiple companies share the same infrastructure but their data is completely separate and secure</td></tr>
+        <tr><td>Metadata-driven</td><td>Salesforce stores your configuration (objects, fields, layouts) as metadata, making customization declarative</td></tr></table>`
+      },
+      {
+        title: "Salesforce Cloud Products",
+        content: `<p class="concept-intro">Salesforce offers multiple "clouds" — each is a suite of features designed for a specific business function. You can use one or many depending on your needs.</p>
+        <table class="def-table"><tr><th>Cloud</th><th>Purpose</th><th>Core Object</th></tr>
+        <tr><td>Sales Cloud</td><td>Manage leads, deals, and sales pipeline</td><td>Opportunity</td></tr>
+        <tr><td>Service Cloud</td><td>Customer support and help desk</td><td>Case</td></tr>
+        <tr><td>Marketing Cloud</td><td>Email marketing and customer journeys</td><td>Campaign</td></tr>
+        <tr><td>Commerce Cloud</td><td>B2B and B2C e-commerce</td><td>Order</td></tr>
+        <tr><td>Experience Cloud</td><td>Build portals and communities for customers/partners</td><td>Network</td></tr>
+        <tr><td>Platform (Force.com)</td><td>Build custom apps on Salesforce infrastructure</td><td>Custom Objects</td></tr>
+        <tr><td>Analytics Cloud</td><td>Advanced analytics and AI-powered insights (Einstein)</td><td>Dataset</td></tr></table>
+        <div class="tip-box"><strong>For Your Developer Role:</strong> You'll mostly work with Sales Cloud and Service Cloud objects (Accounts, Contacts, Leads, Opportunities, Cases) — these are the backbone of almost every Salesforce implementation.</div>`
+      },
+      {
+        title: "Salesforce Editions",
+        content: `<p class="concept-intro">Salesforce offers different editions with varying features and limits. The edition your org is on determines what features are available.</p>
+        <table class="def-table"><tr><th>Edition</th><th>Target</th><th>Key Limit</th></tr>
+        <tr><td>Essentials</td><td>Very small teams</td><td>Max 10 users</td></tr>
+        <tr><td>Professional</td><td>Small-medium business</td><td>Limited automation</td></tr>
+        <tr><td>Enterprise</td><td>Medium-large business</td><td>Full automation, API access</td></tr>
+        <tr><td>Unlimited</td><td>Large enterprise</td><td>Max storage, premium support</td></tr>
+        <tr><td>Developer</td><td>Development & testing</td><td>Free, 2 users only</td></tr></table>
+        <div class="warn-box"><strong>Note:</strong> Many features like Dynamic Dashboards, Workflow Rules, API access, and custom profiles are only available from Enterprise edition upwards.</div>`
+      },
+      {
+        title: "Org & Environment Basics",
+        content: `<p class="concept-intro">An "Org" is a single instance of Salesforce — your company's complete Salesforce environment with its own data, configuration, and users.</p>
+        <table class="def-table"><tr><th>Term</th><th>Definition</th></tr>
+        <tr><td>Production Org</td><td>Your live, real-world Salesforce instance with actual business data</td></tr>
+        <tr><td>Sandbox</td><td>A copy of your org used for development and testing — safe to experiment</td></tr>
+        <tr><td>Developer Org</td><td>A free standalone org (not a copy) for building and learning</td></tr>
+        <tr><td>Scratch Org</td><td>A temporary, disposable org used in modern development (DX)</td></tr>
+        <tr><td>Trailhead Playground</td><td>A special free org provided for Trailhead learning exercises</td></tr></table>
+        <div class="note-box"><strong>Best Practice:</strong> NEVER develop or test directly in Production. Always use a Sandbox. Go to developer.salesforce.com to get your free Developer Org.</div>`
+      },
+      {
+        title: "Core Terminology",
+        content: `<p class="concept-intro">Salesforce has its own vocabulary. Understanding these terms is essential before anything else.</p>
+        <table class="def-table"><tr><th>Term</th><th>Salesforce Meaning</th><th>Analogy</th></tr>
+        <tr><td>Object</td><td>A category of data — like a database table</td><td>Excel sheet tab</td></tr>
+        <tr><td>Record</td><td>A single entry in an object</td><td>A row in a spreadsheet</td></tr>
+        <tr><td>Field</td><td>A single attribute/property of a record</td><td>A column header</td></tr>
+        <tr><td>App</td><td>A collection of tabs/objects grouped for a specific purpose</td><td>A folder of related tools</td></tr>
+        <tr><td>Tab</td><td>Navigation element linking to an object or page</td><td>A menu item</td></tr>
+        <tr><td>Component</td><td>A reusable UI building block (LWC or Aura)</td><td>A LEGO brick</td></tr>
+        <tr><td>Metadata</td><td>The configuration of your org (not the data itself)</td><td>The blueprint, not the building</td></tr></table>`
+      }
+    ],
+    quiz: { question: "What type of software model is Salesforce?", options: ["On-premise software", "SaaS (Software as a Service)", "PaaS only", "Desktop application"], answer: 1, explanation: "Salesforce is a SaaS platform — it's hosted in the cloud, requires no installation, and is accessed through a web browser." }
+  },
+
+  datamodel: {
+    title: "Data Model",
+    icon: "🗄️",
+    subtitle: "Objects, fields, relationships, and the Schema — the backbone of every Salesforce implementation.",
+    concepts: [
+      {
+        title: "Standard vs Custom Objects",
+        content: `<p class="concept-intro">Salesforce comes pre-loaded with Standard Objects — these cover most common business needs. When you need something specific to your business, you create Custom Objects.</p>
+        <table class="def-table"><tr><th>Standard Objects</th><th>Purpose</th></tr>
+        <tr><td>Account</td><td>Represents a company, organization, or individual you do business with</td></tr>
+        <tr><td>Contact</td><td>An individual person associated with an Account</td></tr>
+        <tr><td>Lead</td><td>A potential customer who has not yet been qualified</td></tr>
+        <tr><td>Opportunity</td><td>A potential sale or deal being tracked through a pipeline</td></tr>
+        <tr><td>Case</td><td>A customer service request or support issue</td></tr>
+        <tr><td>Campaign</td><td>A marketing initiative to generate leads or opportunities</td></tr>
+        <tr><td>Task</td><td>A to-do item or action to be completed</td></tr>
+        <tr><td>Event</td><td>A calendar-based activity with a start and end time</td></tr>
+        <tr><td>User</td><td>Anyone with access to your Salesforce org</td></tr>
+        <tr><td>Product</td><td>An item or service you sell</td></tr></table>
+        <div class="note-box"><strong>Custom Objects</strong> have a "__c" suffix in their API name (e.g., My_Object__c). Custom Fields also end in "__c" (e.g., My_Field__c). Standard fields don't have this suffix.</div>`
+      },
+      {
+        title: "Field Types — Complete Guide",
+        content: `<p class="concept-intro">Every field in Salesforce has a data type that determines what kind of data it can store and how it behaves.</p>
+        <table class="def-table"><tr><th>Field Type</th><th>What It Stores</th><th>Key Notes</th></tr>
+        <tr><td>Text</td><td>Plain text</td><td>Up to 255 characters</td></tr>
+        <tr><td>Text Area</td><td>Multi-line text</td><td>Up to 255 characters</td></tr>
+        <tr><td>Text Area (Long)</td><td>Large text blocks</td><td>Up to 131,072 characters</td></tr>
+        <tr><td>Text Area (Rich)</td><td>Formatted text with HTML</td><td>Images, links, bold, etc.</td></tr>
+        <tr><td>Number</td><td>Numeric values</td><td>No currency symbol</td></tr>
+        <tr><td>Currency</td><td>Monetary values</td><td>Shows currency symbol, respects exchange rates</td></tr>
+        <tr><td>Percent</td><td>Percentage values</td><td>Displays % sign automatically</td></tr>
+        <tr><td>Date</td><td>Date only</td><td>No time component</td></tr>
+        <tr><td>Date/Time</td><td>Date with time</td><td>Includes timezone handling</td></tr>
+        <tr><td>Checkbox</td><td>True / False</td><td>Boolean — yes or no</td></tr>
+        <tr><td>Email</td><td>Email address</td><td>Validates email format, creates clickable link</td></tr>
+        <tr><td>Phone</td><td>Phone number</td><td>Creates clickable tel: link</td></tr>
+        <tr><td>URL</td><td>Web address</td><td>Must include http:// or https://</td></tr>
+        <tr><td>Picklist</td><td>Single value from a list</td><td>Users pick one option from dropdown</td></tr>
+        <tr><td>Multi-Select Picklist</td><td>Multiple values from a list</td><td>Users can select several options</td></tr>
+        <tr><td>Lookup</td><td>Link to another record</td><td>Creates a relationship (loose)</td></tr>
+        <tr><td>Master-Detail</td><td>Strong link to parent record</td><td>Creates tight relationship</td></tr>
+        <tr><td>Formula</td><td>Calculated value</td><td>Read-only, auto-recalculates</td></tr>
+        <tr><td>Roll-Up Summary</td><td>Aggregate from child records</td><td>Only on Master-Detail objects</td></tr>
+        <tr><td>Auto Number</td><td>Unique sequential number</td><td>Auto-increments, like Case-0001</td></tr>
+        <tr><td>Geolocation</td><td>Latitude and longitude</td><td>Used for mapping</td></tr></table>`
+      },
+      {
+        title: "Object Relationships — Deep Dive",
+        content: `<p class="concept-intro">Relationships connect objects together, allowing you to see related data across records. Understanding the differences between relationship types is critical for both admin and developer roles.</p>
+        <table class="def-table"><tr><th>Relationship</th><th>Strength</th><th>Delete Behavior</th><th>Roll-Up</th><th>Sharing</th></tr>
+        <tr><td>Master-Detail</td><td>Tight / Strong</td><td>Deleting Master deletes all Detail records</td><td>Yes ✅</td><td>Child inherits parent's sharing</td></tr>
+        <tr><td>Lookup</td><td>Loose / Weak</td><td>Deleting parent does NOT delete child</td><td>No ❌</td><td>Independent sharing rules</td></tr>
+        <tr><td>Many-to-Many</td><td>Via Junction Object</td><td>Depends on junction object's relationships</td><td>Possible</td><td>Complex</td></tr>
+        <tr><td>Hierarchical</td><td>Special Lookup</td><td>User-to-User only (manager relationships)</td><td>No ❌</td><td>N/A</td></tr>
+        <tr><td>External Lookup</td><td>Links to External Object</td><td>No cascade delete</td><td>No ❌</td><td>Independent</td></tr></table>
+        <div class="warn-box"><strong>Critical Limits:</strong> You can have a maximum of 2 Master-Detail relationships per object, but up to 40 Lookup relationships per object.</div>
+        <div class="note-box"><strong>Junction Object:</strong> To create a Many-to-Many relationship, create a new object with two Master-Detail relationships pointing to each of the two objects you want to connect. Example: Student__c and Course__c connected via Enrollment__c (junction).</div>`
+      },
+      {
+        title: "Schema Builder",
+        content: `<p class="concept-intro">Schema Builder is a visual drag-and-drop tool in Salesforce Setup that lets you view, create, and modify objects and their relationships in a diagram format.</p>
+        <div class="tip-box"><strong>How to access:</strong> Setup → Schema Builder (search in Quick Find box)</div>
+        <table class="def-table"><tr><th>Feature</th><th>Description</th></tr>
+        <tr><td>Visual ERD</td><td>Shows all your objects as boxes with lines connecting related objects</td></tr>
+        <tr><td>Create Objects</td><td>Drag an object template from the sidebar and fill in details</td></tr>
+        <tr><td>Add Fields</td><td>Drag field types directly onto an object box</td></tr>
+        <tr><td>View Relationships</td><td>Lines between objects show relationship types and direction</td></tr>
+        <tr><td>Filter Objects</td><td>Show/hide standard, custom, or specific objects to reduce clutter</td></tr></table>`
+      }
+    ],
+    quiz: { question: "Which field type can ONLY be created on a Master-Detail relationship object?", options: ["Formula Field", "Roll-Up Summary Field", "Lookup Field", "Picklist Field"], answer: 1, explanation: "Roll-Up Summary fields (which calculate SUM, COUNT, MIN, MAX from child records) are only available on objects that are on the Master side of a Master-Detail relationship." }
+  },
+
+  security: {
+    title: "Security & Access",
+    icon: "🔐",
+    subtitle: "The complete layered security model — controlling who can do what and who can see what.",
+    concepts: [
+      {
+        title: "The 4-Layer Security Model",
+        content: `<p class="concept-intro">Salesforce security works in layers — each layer adds more granularity. Think of it as concentric circles going from the broadest access (org level) to the most specific (individual record).</p>
+        <table class="def-table"><tr><th>Layer</th><th>Controls</th><th>Tool</th></tr>
+        <tr><td>1. Org Level</td><td>Who can log into Salesforce at all</td><td>User licenses, IP restrictions, login hours</td></tr>
+        <tr><td>2. Object Level</td><td>Which objects a user can access and what they can do (CRUD)</td><td>Profiles & Permission Sets</td></tr>
+        <tr><td>3. Field Level</td><td>Which fields within an object a user can see or edit</td><td>Field-Level Security (FLS) in Profiles</td></tr>
+        <tr><td>4. Record Level</td><td>Which specific records within an object a user can access</td><td>OWD, Roles, Sharing Rules, Manual Sharing</td></tr></table>
+        <div class="note-box"><strong>Remember:</strong> Layers are cumulative. If a user can't access an object (Layer 2), field permissions (Layer 3) don't even matter. Always start from the broadest layer and work inward.</div>`
+      },
+      {
+        title: "Profiles — Deep Dive",
+        content: `<p class="concept-intro">A Profile is the primary way to control what a user CAN DO in Salesforce. Every single user must be assigned exactly one profile — no more, no less.</p>
+        <table class="def-table"><tr><th>Profile Controls</th><th>What It Means</th></tr>
+        <tr><td>Object Permissions</td><td>Read, Create, Edit, Delete, View All, Modify All — for each object</td></tr>
+        <tr><td>Field-Level Security</td><td>Visible or editable — for each field on each object</td></tr>
+        <tr><td>App Permissions</td><td>Which Salesforce apps the user can access</td></tr>
+        <tr><td>System Permissions</td><td>Special abilities like "Manage Users", "Customize Application", "API Enabled"</td></tr>
+        <tr><td>Login IP Ranges</td><td>Restrict which IP addresses users on this profile can log in from</td></tr>
+        <tr><td>Login Hours</td><td>Restrict what hours of the day users on this profile can log in</td></tr>
+        <tr><td>Page Layouts</td><td>Which page layout to display for each object</td></tr>
+        <tr><td>Record Types</td><td>Which record types a user can see and create</td></tr></table>
+        <div class="warn-box"><strong>Standard Profiles cannot be deleted or fully customized.</strong> Examples: System Administrator, Standard User, Read Only. Clone them to create custom profiles.</div>`
+      },
+      {
+        title: "Permission Sets & Permission Set Groups",
+        content: `<p class="concept-intro">Permission Sets allow you to EXTEND a user's permissions beyond what their profile gives them — without changing their profile. Multiple permission sets can be assigned to a single user.</p>
+        <div class="tip-box"><strong>Best Practice:</strong> Assign the most restrictive profile possible, then use Permission Sets to grant additional access as needed. This is the modern Salesforce approach.</div>
+        <table class="def-table"><tr><th>Concept</th><th>Detail</th></tr>
+        <tr><td>Permission Set</td><td>A collection of settings and permissions that can be assigned to users on top of their profile</td></tr>
+        <tr><td>Permission Set Group</td><td>A bundle of multiple Permission Sets — assign the group instead of individual sets for easier management</td></tr>
+        <tr><td>Muting Permission Set</td><td>Used inside a Permission Set Group to remove (mute) specific permissions from one of the sets in the group</td></tr></table>`
+      },
+      {
+        title: "Roles & Role Hierarchy",
+        content: `<p class="concept-intro">Roles control RECORD VISIBILITY — not what you can do, but what records you can see. The role hierarchy is like an org chart: users higher up can see records owned by users below them.</p>
+        <table class="def-table"><tr><th>Concept</th><th>Explanation</th></tr>
+        <tr><td>Role</td><td>A position in the hierarchy. Users at higher roles see records owned by lower roles.</td></tr>
+        <tr><td>Grant Access Up Hierarchy</td><td>An object-level setting. If enabled, managers see subordinate records. If disabled, they don't.</td></tr>
+        <tr><td>Role ≠ Profile</td><td>Profile = what you can DO. Role = what you can SEE. They are completely independent settings.</td></tr></table>
+        <div class="note-box"><strong>Important:</strong> Roles are optional — you don't have to assign every user a role. But if you have OWD set to Private, roles become essential for visibility.</div>`
+      },
+      {
+        title: "Organization-Wide Defaults (OWD)",
+        content: `<p class="concept-intro">OWD sets the BASELINE record access for all users. It answers: "By default, can a user see records they don't own?" OWD should always be set to the most restrictive setting your business needs — you then OPEN access up using roles and sharing rules.</p>
+        <table class="def-table"><tr><th>OWD Setting</th><th>What It Means</th></tr>
+        <tr><td>Private</td><td>Only the record owner and users above in the role hierarchy can view and edit the record</td></tr>
+        <tr><td>Public Read Only</td><td>All users can view the record, but only the owner (and above in hierarchy) can edit it</td></tr>
+        <tr><td>Public Read/Write</td><td>All users can view and edit all records (no restrictions)</td></tr>
+        <tr><td>Public Read/Write/Transfer</td><td>Available for Leads and Cases — users can also change ownership</td></tr>
+        <tr><td>Controlled by Parent</td><td>Child record access follows the parent record's sharing settings (Master-Detail relationships)</td></tr></table>
+        <div class="warn-box"><strong>You can ONLY open access with OWD, never restrict it further using other tools.</strong> OWD is the floor — Roles, Sharing Rules, and Manual Sharing raise the floor for specific users.</div>`
+      },
+      {
+        title: "Sharing Rules & Manual Sharing",
+        content: `<p class="concept-intro">Sharing Rules automatically extend record access to additional users or groups, beyond what OWD and Role Hierarchy provides. Manual Sharing lets record owners share individual records with specific people.</p>
+        <table class="def-table"><tr><th>Type</th><th>Based On</th><th>Example</th></tr>
+        <tr><td>Criteria-Based Sharing</td><td>Field values on the record</td><td>Share all Opportunities where Stage = "Closed Won" with the Finance Team</td></tr>
+        <tr><td>Owner-Based Sharing</td><td>Who owns the record</td><td>Share all records owned by Sales Team West with Sales Team East</td></tr>
+        <tr><td>Manual Sharing</td><td>Done by record owner or admin</td><td>Owner shares a specific Account record with a colleague</td></tr></table>
+        <div class="note-box"><strong>Sharing Rules can only OPEN access — they cannot restrict access below what OWD already grants.</strong></div>`
+      }
+    ],
+    quiz: { question: "A user needs to see records owned by their peers in the same department, but OWD is set to Private. What is the BEST solution?", options: ["Change OWD to Public Read Only", "Create a Sharing Rule based on criteria", "Give everyone the System Administrator profile", "Add all users to the same Role"], answer: 1, explanation: "A Criteria-Based or Owner-Based Sharing Rule is the correct approach to extend record visibility beyond OWD without changing the OWD setting globally. Changing OWD would affect all users, not just this department." }
+  },
+
+  automation: {
+    title: "Automation",
+    icon: "⚙️",
+    subtitle: "Flow Builder, Process Builder, Workflow Rules — automating business processes without code.",
+    concepts: [
+      {
+        title: "Automation Tool Comparison",
+        content: `<p class="concept-intro">Salesforce has several automation tools with overlapping capabilities. Knowing which to use (and which are being retired) is essential.</p>
+        <table class="def-table"><tr><th>Tool</th><th>Status</th><th>Use For</th></tr>
+        <tr><td>Flow Builder</td><td>✅ Current Standard</td><td>Everything — complex logic, UI flows, triggers, scheduled automation</td></tr>
+        <tr><td>Process Builder</td><td>⚠️ Being Retired</td><td>Simple record updates and email alerts (migrate to Flow)</td></tr>
+        <tr><td>Workflow Rules</td><td>⚠️ Being Retired</td><td>Very basic field updates, email alerts, tasks, outbound messages (migrate to Flow)</td></tr>
+        <tr><td>Apex Triggers</td><td>✅ Code-Based</td><td>Complex logic that declarative tools cannot handle</td></tr>
+        <tr><td>Approval Processes</td><td>✅ Current</td><td>Multi-step human approvals (e.g., manager must approve a discount)</td></tr></table>
+        <div class="warn-box"><strong>Salesforce is retiring Workflow Rules and Process Builder.</strong> Do not build new automation with these tools. Always use Flow Builder.</div>`
+      },
+      {
+        title: "Flow Builder — Complete Guide",
+        content: `<p class="concept-intro">Flow Builder is the modern, point-and-click automation tool in Salesforce. It's powerful enough to handle almost anything without code.</p>
+        <table class="def-table"><tr><th>Flow Type</th><th>When It Runs</th><th>Has UI?</th></tr>
+        <tr><td>Record-Triggered Flow</td><td>When a record is created, updated, or deleted</td><td>No (background)</td></tr>
+        <tr><td>Screen Flow</td><td>When a user manually launches it (via button, Quick Action, Lightning page)</td><td>Yes (wizard)</td></tr>
+        <tr><td>Scheduled Flow</td><td>At a specific time or on a recurring schedule</td><td>No (background)</td></tr>
+        <tr><td>Autolaunched Flow</td><td>Invoked by another process (Process Builder, Apex, REST API)</td><td>No (background)</td></tr>
+        <tr><td>Platform Event Flow</td><td>When a Platform Event message is received</td><td>No (background)</td></tr></table>
+        <div class="note-box"><strong>Flow Elements:</strong> Get Records (query data), Create Records, Update Records, Delete Records, Decision (if/else logic), Loop (iterate over collections), Assignment (set variables), Subflow (call another flow).</div>`
+      },
+      {
+        title: "Approval Processes",
+        content: `<p class="concept-intro">Approval Processes automate the routing of records for human review and approval. They're used when a manager, compliance team, or another person needs to review and approve a change before it takes effect.</p>
+        <table class="def-table"><tr><th>Component</th><th>Description</th></tr>
+        <tr><td>Entry Criteria</td><td>Rules that determine which records enter the approval process (e.g., Discount > 20%)</td></tr>
+        <tr><td>Approver</td><td>The user(s) who must approve the record — can be a specific user, a queue, or the manager in the hierarchy</td></tr>
+        <tr><td>Approval Steps</td><td>Sequential stages of approval. Each step can have different approvers and criteria.</td></tr>
+        <tr><td>Initial Submission Actions</td><td>Automated actions that happen when a record enters the process (e.g., lock the record, send email)</td></tr>
+        <tr><td>Final Approval Actions</td><td>Automated actions when the record is fully approved</td></tr>
+        <tr><td>Final Rejection Actions</td><td>Automated actions when the record is rejected</td></tr>
+        <tr><td>Recall Actions</td><td>Automated actions when the submitter recalls the approval request</td></tr></table>`
+      }
+    ],
+    quiz: { question: "You need to automatically update a field on an Account whenever a related Opportunity is Closed Won. What is the BEST tool to use today?", options: ["Workflow Rule", "Process Builder", "Flow Builder (Record-Triggered)", "Apex Trigger"], answer: 2, explanation: "Flow Builder (specifically a Record-Triggered Flow on Opportunity) is the correct modern approach. Workflow Rules and Process Builder are being retired. Apex would be overkill for this simple use case." }
+  },
+
+  validation: {
+    title: "Validation & Formula",
+    icon: "✅",
+    subtitle: "Ensuring data quality with validation rules and creating dynamic calculated fields.",
+    concepts: [
+      {
+        title: "Validation Rules — How They Work",
+        content: `<p class="concept-intro">Validation Rules ensure data quality by preventing records from being saved when certain conditions aren't met. The formula in a validation rule defines when an ERROR should occur.</p>
+        <div class="warn-box"><strong>Critical Logic:</strong> The validation rule formula = the condition that is WRONG (error state). If the formula evaluates to TRUE → error shown, save blocked. If FALSE → save proceeds normally.</div>
+        <table class="def-table"><tr><th>Element</th><th>Description</th></tr>
+        <tr><td>Error Condition Formula</td><td>A formula that returns TRUE when there is a problem with the data</td></tr>
+        <tr><td>Error Message</td><td>The message shown to the user when the formula returns TRUE</td></tr>
+        <tr><td>Error Location</td><td>Show error at the top of the page, or next to a specific field</td></tr></table>
+        <div class="note-box"><strong>Example:</strong> If you want to require a phone number when Account Type is "Customer", your formula would be: <code>AND(ISPICKVAL(Type, "Customer"), ISBLANK(Phone))</code> — meaning "show error when Type IS Customer AND Phone IS blank".</div>`
+      },
+      {
+        title: "Formula Functions — Complete Reference",
+        content: `<p class="concept-intro">Salesforce formulas use built-in functions to perform calculations, comparisons, and data manipulation. These work in Formula Fields, Validation Rules, and other places.</p>
+        <table class="def-table"><tr><th>Function</th><th>Purpose</th><th>Example</th></tr>
+        <tr><td>ISBLANK(field)</td><td>Returns TRUE if field is empty</td><td>ISBLANK(Phone)</td></tr>
+        <tr><td>NOT(condition)</td><td>Reverses TRUE/FALSE</td><td>NOT(ISBLANK(Phone))</td></tr>
+        <tr><td>AND(c1, c2)</td><td>TRUE only if both conditions true</td><td>AND(ISBLANK(Phone), ISBLANK(Email))</td></tr>
+        <tr><td>OR(c1, c2)</td><td>TRUE if either condition is true</td><td>OR(ISBLANK(Phone), ISBLANK(Email))</td></tr>
+        <tr><td>IF(cond, val1, val2)</td><td>Returns val1 if condition true, val2 if false</td><td>IF(Amount > 10000, "Large", "Small")</td></tr>
+        <tr><td>ISPICKVAL(fld, 'val')</td><td>Checks picklist value</td><td>ISPICKVAL(Stage, "Closed Won")</td></tr>
+        <tr><td>TEXT(field)</td><td>Converts field to text</td><td>TEXT(CloseDate)</td></tr>
+        <tr><td>LEN(text)</td><td>Returns character count</td><td>LEN(Description) > 100</td></tr>
+        <tr><td>TODAY()</td><td>Returns today's date</td><td>CloseDate < TODAY()</td></tr>
+        <tr><td>NOW()</td><td>Returns current date and time</td><td>NOW() - CreatedDate</td></tr>
+        <tr><td>DATEVALUE()</td><td>Converts DateTime to Date</td><td>DATEVALUE(LastModifiedDate)</td></tr>
+        <tr><td>YEAR/MONTH/DAY</td><td>Extract date parts</td><td>YEAR(CloseDate)</td></tr>
+        <tr><td>CONTAINS(text, val)</td><td>Checks if text contains a value</td><td>CONTAINS(Name, "LLC")</td></tr>
+        <tr><td>REGEX(text, pattern)</td><td>Validates against regex pattern</td><td>REGEX(Phone, "[0-9]{10}")</td></tr>
+        <tr><td>VLOOKUP(field, obj, val)</td><td>Look up value from another object</td><td>Used in validation rules only</td></tr></table>`
+      },
+      {
+        title: "Formula Fields vs Roll-Up Summary Fields",
+        content: `<p class="concept-intro">Both are auto-calculated read-only fields, but they work very differently.</p>
+        <table class="def-table"><tr><th>Feature</th><th>Formula Field</th><th>Roll-Up Summary Field</th></tr>
+        <tr><td>Calculates</td><td>Based on fields on the SAME record (or cross-object via relationships)</td><td>Aggregate of CHILD records (COUNT, SUM, MIN, MAX)</td></tr>
+        <tr><td>Relationship Required</td><td>No (but can use cross-object)</td><td>Yes — Master-Detail only</td></tr>
+        <tr><td>Real-time</td><td>Yes — recalculates on view</td><td>Near real-time — recalculates when child records change</td></tr>
+        <tr><td>Can filter</td><td>Using IF/AND/OR logic</td><td>Yes — filter criteria available</td></tr>
+        <tr><td>Example</td><td>Full name = FirstName + " " + LastName</td><td>Total Opportunity Amount = SUM of all child Opportunity Amounts</td></tr></table>`
+      }
+    ],
+    quiz: { question: "A validation rule formula evaluates to TRUE. What happens?", options: ["The record saves successfully", "An error message is displayed and save is blocked", "The record is deleted", "The formula is ignored"], answer: 1, explanation: "When a validation rule formula returns TRUE, it means the error condition is met — Salesforce displays the error message and prevents the record from being saved." }
+  },
+
+  reports: {
+    title: "Reports & Dashboards",
+    icon: "📊",
+    subtitle: "Analyzing your data with reports and visualizing it with dashboards.",
+    concepts: [
+      {
+        title: "Report Types — All 4 Explained",
+        content: `<p class="concept-intro">Salesforce has 4 report formats. Choosing the right one depends on how you want to display and group your data.</p>
+        <table class="def-table"><tr><th>Type</th><th>Can Group?</th><th>Best For</th><th>Supports Chart?</th></tr>
+        <tr><td>Tabular</td><td>❌ No grouping</td><td>Simple lists, exports to Excel</td><td>❌ No</td></tr>
+        <tr><td>Summary</td><td>✅ Row groupings</td><td>Subtotals, grouped data, most common type</td><td>✅ Yes</td></tr>
+        <tr><td>Matrix</td><td>✅ Row AND column groupings</td><td>Comparing data across two dimensions (e.g., Sales by Region by Quarter)</td><td>✅ Yes</td></tr>
+        <tr><td>Joined</td><td>✅ Multiple blocks</td><td>Side-by-side comparison of different data sets</td><td>✅ Limited</td></tr></table>
+        <div class="note-box"><strong>Tabular reports cannot be used as dashboard source reports</strong> unless they have a row limit. Only Summary and Matrix reports can fully power dashboard components.</div>`
+      },
+      {
+        title: "Report Features & Filters",
+        content: `<p class="concept-intro">Reports come with powerful features to slice, dice, and analyze your data.</p>
+        <table class="def-table"><tr><th>Feature</th><th>What It Does</th></tr>
+        <tr><td>Standard Filters</td><td>Date range, record ownership (My Records, My Team's, All) — available on every report</td></tr>
+        <tr><td>Field Filters</td><td>Filter by specific field values (e.g., Stage = "Prospecting")</td></tr>
+        <tr><td>Cross Filters</td><td>Filter based on related object (e.g., Accounts WITHOUT Contacts, Opportunities WITH Products)</td></tr>
+        <tr><td>Row Limit</td><td>Limit the number of records shown — required for Tabular reports on dashboards</td></tr>
+        <tr><td>Bucket Fields</td><td>Group field values into custom categories within the report without changing actual data. E.g., group Amount into "Small/Medium/Large"</td></tr>
+        <tr><td>Custom Summary Formulas</td><td>Create calculated columns in Summary/Matrix reports using formulas on grouped data</td></tr>
+        <tr><td>Conditional Formatting</td><td>Highlight cells with colors based on values</td></tr>
+        <tr><td>Stacked Summaries</td><td>Show multiple summary groupings in a cleaner layout</td></tr>
+        <tr><td>Report Subscriptions</td><td>Schedule reports to run automatically and be emailed to users</td></tr></table>`
+      },
+      {
+        title: "Dashboards — Deep Dive",
+        content: `<p class="concept-intro">Dashboards are visual snapshots of your org's data, built from report data. They're real-time visual displays refreshed when you load or refresh them.</p>
+        <table class="def-table"><tr><th>Component Type</th><th>Best For</th></tr>
+        <tr><td>Bar / Column Chart</td><td>Comparing values across categories</td></tr>
+        <tr><td>Line Chart</td><td>Showing trends over time</td></tr>
+        <tr><td>Donut / Pie Chart</td><td>Showing proportion/share of a whole</td></tr>
+        <tr><td>Funnel Chart</td><td>Sales pipeline stages</td></tr>
+        <tr><td>Gauge</td><td>Progress toward a target (e.g., 75% of quota)</td></tr>
+        <tr><td>Metric</td><td>Single key number (e.g., total revenue)</td></tr>
+        <tr><td>Table</td><td>Tabular data display</td></tr>
+        <tr><td>Scatter Chart</td><td>Showing correlation between two values</td></tr></table>
+        <div class="note-box"><strong>Running User:</strong> Dashboards show data as if viewed by the "Running User". If Running User is an executive, they see all data. Dynamic Dashboards show each viewer's own data.</div>
+        <div class="warn-box"><strong>Dynamic Dashboards limit:</strong> 5 per org in Enterprise Edition, 10 in Unlimited Edition.</div>`
+      }
+    ],
+    quiz: { question: "Which report type can group data by BOTH rows AND columns?", options: ["Tabular", "Summary", "Matrix", "Joined"], answer: 2, explanation: "Matrix reports support grouping by both rows and columns, making them ideal for cross-dimensional analysis like Sales Revenue by Region (rows) by Quarter (columns)." }
+  },
+
+  sales: {
+    title: "Sales Cloud",
+    icon: "💼",
+    subtitle: "The complete sales cycle — from lead to closed deal.",
+    concepts: [
+      {
+        title: "The Sales Cycle in Salesforce",
+        content: `<p class="concept-intro">Salesforce Sales Cloud maps to a complete sales cycle. Understanding how these objects connect is fundamental for both admin and developer roles.</p>
+        <table class="def-table"><tr><th>Stage</th><th>Object</th><th>Description</th></tr>
+        <tr><td>Prospect enters</td><td>Lead</td><td>Unqualified potential customer — could be from a web form, trade show, or cold call</td></tr>
+        <tr><td>Lead qualified</td><td>Lead Conversion</td><td>Admin or sales rep converts Lead → creates Account + Contact + Opportunity in one step</td></tr>
+        <tr><td>Deal in progress</td><td>Opportunity</td><td>The potential deal being tracked through pipeline stages (Prospecting → Proposal → Closed)</td></tr>
+        <tr><td>Deal won</td><td>Opportunity (Closed Won)</td><td>Stage set to Closed Won, revenue counted in forecasts</td></tr>
+        <tr><td>Relationship managed</td><td>Account + Contact</td><td>Ongoing relationship maintained after the deal</td></tr></table>
+        <div class="note-box"><strong>Lead Conversion Note:</strong> When you convert a Lead, you can choose to create a new Account and Contact, or link to an existing one. The original Lead record is still accessible but marked as "Converted".</div>`
+      },
+      {
+        title: "Opportunity Management",
+        content: `<p class="concept-intro">Opportunities are the core of Sales Cloud. They represent potential deals and are tracked through customizable pipeline stages.</p>
+        <table class="def-table"><tr><th>Feature</th><th>Description</th></tr>
+        <tr><td>Opportunity Stages</td><td>Customizable pipeline steps (e.g., Prospecting, Qualification, Proposal, Negotiation, Closed Won/Lost)</td></tr>
+        <tr><td>Probability</td><td>Percentage likelihood of closing — can be manually set or auto-populated based on stage</td></tr>
+        <tr><td>Close Date</td><td>Expected date the deal will close — used in forecasting</td></tr>
+        <tr><td>Opportunity Path</td><td>Visual guidance showing key fields and tips at each stage</td></tr>
+        <tr><td>Opportunity Teams</td><td>Multiple users can be added to work on a single Opportunity with different roles</td></tr>
+        <tr><td>Contact Roles</td><td>Links Contacts to Opportunities with their role (Decision Maker, Influencer, etc.)</td></tr>
+        <tr><td>Competitor Tracking</td><td>Log which competitors you're up against on each deal</td></tr></table>`
+      },
+      {
+        title: "Products & Price Books",
+        content: `<p class="concept-intro">Products and Price Books allow sales reps to add line items to Opportunities, creating detailed quotes and enabling revenue reporting by product.</p>
+        <table class="def-table"><tr><th>Object</th><th>Description</th></tr>
+        <tr><td>Product (Product2)</td><td>An item or service you sell. Has a name, product code, and description.</td></tr>
+        <tr><td>Price Book</td><td>A catalog that defines the price for each product. Can have multiple price books (e.g., Standard, Partner, Reseller).</td></tr>
+        <tr><td>Price Book Entry</td><td>The junction between a Product and a Price Book — sets the specific price for that product in that price book</td></tr>
+        <tr><td>Opportunity Line Item</td><td>A product added to a specific Opportunity. Links the Opportunity to a Price Book Entry.</td></tr>
+        <tr><td>Standard Price Book</td><td>The default price book automatically created in every Salesforce org</td></tr></table>`
+      }
+    ],
+    quiz: { question: "When a Lead is converted in Salesforce, what records are created?", options: ["Only an Account", "Account and Contact only", "Account, Contact, and Opportunity", "Contact and Opportunity only"], answer: 2, explanation: "Lead conversion creates an Account (for the company), a Contact (for the person), and optionally an Opportunity (for the potential deal). All three are typically created unless you choose to skip the Opportunity." }
+  },
+
+  service: {
+    title: "Service Cloud",
+    icon: "🎧",
+    subtitle: "Customer support automation — Cases, Queues, Knowledge, and Service processes.",
+    concepts: [
+      {
+        title: "Cases — The Core of Service Cloud",
+        content: `<p class="concept-intro">A Case is the primary record in Service Cloud — it represents a single customer support request, complaint, or inquiry from start to resolution.</p>
+        <table class="def-table"><tr><th>Case Field</th><th>Purpose</th></tr>
+        <tr><td>Subject</td><td>A brief description of the issue</td></tr>
+        <tr><td>Description</td><td>Detailed explanation of the problem</td></tr>
+        <tr><td>Status</td><td>Current state: New, Working, Escalated, Closed, etc.</td></tr>
+        <tr><td>Priority</td><td>Low, Medium, High, Critical — determines urgency</td></tr>
+        <tr><td>Origin</td><td>How the case was submitted: Email, Phone, Web, Chat</td></tr>
+        <tr><td>Account / Contact</td><td>Links the case to the customer who submitted it</td></tr>
+        <tr><td>Owner</td><td>The agent or Queue responsible for resolving the case</td></tr></table>`
+      },
+      {
+        title: "Case Routing & Automation",
+        content: `<p class="concept-intro">Salesforce can automatically route, escalate, and manage Cases so the right agent gets the right case at the right time.</p>
+        <table class="def-table"><tr><th>Tool</th><th>What It Does</th></tr>
+        <tr><td>Queues</td><td>Hold Cases not yet assigned to a specific agent. Agents pick from the queue or cases are assigned from it.</td></tr>
+        <tr><td>Case Assignment Rules</td><td>Automatically assign Cases to a specific user or Queue based on criteria (e.g., Product Type = Hardware → route to Hardware Queue)</td></tr>
+        <tr><td>Escalation Rules</td><td>Automatically escalate Cases that haven't been resolved within a defined time period (based on age or business hours)</td></tr>
+        <tr><td>Auto-Response Rules</td><td>Automatically send an email response to customers when a Case is created</td></tr>
+        <tr><td>Omni-Channel</td><td>Intelligently routes work items (Cases, Chats, Social posts) to agents based on capacity, skill, and availability</td></tr>
+        <tr><td>Macros</td><td>Allow agents to perform multiple actions on a Case (update fields, send email, add note) with a single click</td></tr></table>`
+      },
+      {
+        title: "Knowledge & Entitlements",
+        content: `<p class="concept-intro">Knowledge is an article database agents and customers use to find answers. Entitlements define the level of support a customer is entitled to receive.</p>
+        <table class="def-table"><tr><th>Feature</th><th>Description</th></tr>
+        <tr><td>Knowledge Article</td><td>A published document with answers to common questions — can be internal (agent-only) or public (customer-facing)</td></tr>
+        <tr><td>Article Types</td><td>Categories of articles: FAQ, How-To, Product Info — each can have custom fields</td></tr>
+        <tr><td>Data Categories</td><td>Organize and control visibility of knowledge articles</td></tr>
+        <tr><td>Entitlement</td><td>Defines what level of support a customer has (e.g., "24/7 Support", "Business Hours Only", "Max 10 cases/month")</td></tr>
+        <tr><td>Entitlement Process</td><td>A timeline of steps a support team must follow to resolve a case within SLA</td></tr>
+        <tr><td>Milestone</td><td>A required step in an entitlement process — triggers warnings and actions if not completed on time</td></tr></table>`
+      }
+    ],
+    quiz: { question: "What is the difference between Case Assignment Rules and Case Escalation Rules?", options: ["They are the same thing", "Assignment Rules route new cases; Escalation Rules escalate unresolved cases over time", "Escalation Rules create new cases; Assignment Rules close them", "Assignment Rules work only on closed cases"], answer: 1, explanation: "Assignment Rules determine WHERE a case goes when it's created (which agent or queue). Escalation Rules trigger when a case has NOT been resolved within a time limit — they elevate the priority or reassign it." }
+  },
+
+  datamanagement: {
+    title: "Data Management",
+    icon: "📦",
+    subtitle: "Importing, exporting, and maintaining clean data in your Salesforce org.",
+    concepts: [
+      {
+        title: "Import Wizard vs Data Loader",
+        content: `<p class="concept-intro">Salesforce provides two main tools for importing data. Knowing when to use each is important.</p>
+        <table class="def-table"><tr><th>Feature</th><th>Import Wizard</th><th>Data Loader</th></tr>
+        <tr><td>Access</td><td>Browser-based (in Salesforce Setup)</td><td>Desktop app (Windows/Mac)</td></tr>
+        <tr><td>Max Records</td><td>50,000 per import</td><td>Up to 5 million per batch</td></tr>
+        <tr><td>Supported Objects</td><td>Accounts, Contacts, Leads, Solutions, Campaign Members, and custom objects</td><td>All standard and custom objects</td></tr>
+        <tr><td>Operations</td><td>Insert, Update, Upsert</td><td>Insert, Update, Upsert, Delete, Export, Export All</td></tr>
+        <tr><td>Duplicate Handling</td><td>Built-in duplicate detection</td><td>No built-in duplicate detection</td></tr>
+        <tr><td>Best For</td><td>Small-medium imports, less technical users</td><td>Large volume, technical users, automation</td></tr></table>
+        <div class="note-box"><strong>Upsert:</strong> A combination of Insert + Update. If a matching record exists (based on an external ID), it updates it. If no match exists, it inserts a new record.</div>`
+      },
+      {
+        title: "Duplicate Management",
+        content: `<p class="concept-intro">Salesforce has built-in tools to prevent and manage duplicate records, which are a common data quality problem.</p>
+        <table class="def-table"><tr><th>Tool</th><th>Purpose</th></tr>
+        <tr><td>Matching Rule</td><td>Defines the criteria for identifying potential duplicates (e.g., same Name + Email = likely duplicate)</td></tr>
+        <tr><td>Duplicate Rule</td><td>Defines the ACTION to take when a duplicate is found — Allow (with alert), Block (prevent save), or Report</td></tr>
+        <tr><td>Duplicate Jobs</td><td>Batch process to find duplicates in your existing data</td></tr>
+        <tr><td>Merge Records</td><td>Combine two or three duplicate records into one master record, choosing which field values to keep</td></tr></table>`
+      },
+      {
+        title: "Data Export & Backup",
+        content: `<p class="concept-intro">Regularly exporting your data is an important admin responsibility for backup and compliance purposes.</p>
+        <table class="def-table"><tr><th>Tool</th><th>Description</th></tr>
+        <tr><td>Data Export Service</td><td>Built into Salesforce Setup — exports all org data as CSV files. Can be scheduled weekly or monthly.</td></tr>
+        <tr><td>Data Loader (Export)</td><td>Export specific objects with SOQL queries. More targeted than Data Export Service.</td></tr>
+        <tr><td>Report Export</td><td>Export report results to Excel or CSV directly from a report</td></tr>
+        <tr><td>Salesforce Backup</td><td>A paid add-on for automated daily backups with restore capabilities</td></tr></table>
+        <div class="warn-box"><strong>Data Export is NOT a real-time backup.</strong> Production data can be accidentally deleted between exports. Consider the paid Salesforce Backup product for critical data.</div>`
+      }
+    ],
+    quiz: { question: "You need to import 200,000 records into Salesforce. Which tool should you use?", options: ["Import Wizard", "Data Loader", "Manual entry", "Report Builder"], answer: 1, explanation: "Data Loader is the correct choice for large volume imports (more than 50,000 records). Import Wizard has a 50,000 record limit, making it unsuitable for this volume." }
+  },
+
+  appbuilder: {
+    title: "App Builder & UI",
+    icon: "🧩",
+    subtitle: "Customizing the Salesforce user interface with Lightning App Builder, layouts, and components.",
+    concepts: [
+      {
+        title: "Lightning App Builder",
+        content: `<p class="concept-intro">Lightning App Builder is a drag-and-drop tool for building and customizing pages in the Salesforce Lightning Experience without writing code.</p>
+        <table class="def-table"><tr><th>Page Type</th><th>What It Customizes</th></tr>
+        <tr><td>App Page</td><td>A standalone page accessible from the App Launcher or navigation bar (like a home dashboard for an app)</td></tr>
+        <tr><td>Record Page</td><td>The page you see when you open a specific record (Account, Contact, Opportunity, etc.)</td></tr>
+        <tr><td>Home Page</td><td>The main landing page users see when they log in</td></tr></table>
+        <div class="note-box"><strong>Lightning Components:</strong> Pages are built from components — drag standard or custom components onto a canvas. Components can be standard Salesforce components, custom-built LWC components, or AppExchange components.</div>
+        <div class="tip-box"><strong>Activation:</strong> Pages built in Lightning App Builder must be activated and assigned to users (by Profile, App, or Record Type) to be visible.</div>`
+      },
+      {
+        title: "Page Layouts vs Lightning Pages",
+        content: `<p class="concept-intro">These are two different things that work together — both affect how a record looks, but they control different aspects.</p>
+        <table class="def-table"><tr><th>Feature</th><th>Page Layout</th><th>Lightning Record Page</th></tr>
+        <tr><td>Controls</td><td>Which fields are on the page, their order, and required fields. Also controls related lists, buttons, and quick actions.</td><td>The overall layout of the page — tabs, sidebars, sections, which components appear</td></tr>
+        <tr><td>Assigned Via</td><td>Profile + Record Type assignment</td><td>App + Profile + Record Type activation</td></tr>
+        <tr><td>Tool</td><td>Page Layout Editor (in Setup, on the object)</td><td>Lightning App Builder</td></tr>
+        <tr><td>Applies To</td><td>Classic AND Lightning Experience</td><td>Lightning Experience only</td></tr></table>`
+      },
+      {
+        title: "Quick Actions, Compact Layouts & List Views",
+        content: `<p class="concept-intro">These three features enhance productivity and how users interact with records.</p>
+        <table class="def-table"><tr><th>Feature</th><th>Purpose</th></tr>
+        <tr><td>Quick Actions</td><td>Buttons that let users perform tasks quickly (Create Record, Update Record, Log a Call, Send Email) — appear in the action bar on record pages</td></tr>
+        <tr><td>Object-Specific Actions</td><td>Quick actions tied to a specific object — appear on that object's record pages</td></tr>
+        <tr><td>Global Actions</td><td>Quick actions accessible from the global header — work from anywhere in Salesforce</td></tr>
+        <tr><td>Compact Layout</td><td>Controls which fields are shown in the record's highlight panel (the top card) and in mobile cards. Show the most important fields at a glance.</td></tr>
+        <tr><td>List Views</td><td>Filtered lists of records for an object. Users can create personal list views or admins can share them publicly. Support inline editing.</td></tr></table>`
+      }
+    ],
+    quiz: { question: "A user opens an Account record and sees a different page layout than their colleague. What is the most likely reason?", options: ["They have different browsers", "They are assigned different Profiles or Record Types", "One user is in a different timezone", "Their internet connection speed differs"], answer: 1, explanation: "Page Layouts are assigned based on a user's Profile and the Record Type of the record. Different profiles or record types result in different page layouts being displayed for the same record." }
+  }
+};
+
+// ─── SEARCH INDEX ───────────────────────────────────────────────────────────
+const searchIndex = [];
+Object.entries(topicsData).forEach(([key, topic]) => {
+  topic.concepts.forEach((concept, i) => {
+    searchIndex.push({
+      topicKey: key,
+      topicTitle: topic.title,
+      topicIcon: topic.icon,
+      conceptTitle: concept.title,
+      conceptIndex: i,
+      snippet: concept.content.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').substring(0, 200)
+    });
+  });
+});
+
+// ─── STATE ──────────────────────────────────────────────────────────────────
+let visitedTopics = new Set();
+let currentView = 'home';
+
+// ─── FUNCTIONS ──────────────────────────────────────────────────────────────
+function showView(viewName) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + viewName).classList.add('active');
+
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const navItem = document.getElementById('nav-' + viewName);
+  if (navItem) navItem.classList.add('active');
+
+  const titles = { home: 'Overview', cheatsheet: 'Quick Cheat Sheet', search: 'Search Results' };
+  document.getElementById('topbarTitle').textContent = titles[viewName] || viewName;
+  document.getElementById('topbarCrumb').textContent = 'Home → ' + (titles[viewName] || viewName);
+  currentView = viewName;
+}
+
+function showTopic(topicKey) {
+  const topic = topicsData[topicKey];
+  if (!topic) return;
+
+  visitedTopics.add(topicKey);
+  updateProgress();
+
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const navItem = document.getElementById('nav-' + topicKey);
+  if (navItem) navItem.classList.add('active');
+
+  document.getElementById('topbarTitle').textContent = topic.icon + ' ' + topic.title;
+  document.getElementById('topbarCrumb').textContent = 'Home → ' + topic.title;
+
+  let html = `
+    <div class="detail-header animate">
+      <button class="detail-back" onclick="showView('home')">← Back to All Topics</button>
+      <div class="detail-title">${topic.icon} ${topic.title}</div>
+      <div class="detail-subtitle">${topic.subtitle}</div>
+    </div>
+  `;
+
+  topic.concepts.forEach((concept, i) => {
+    html += `
+      <div class="concept-block animate" id="concept-${topicKey}-${i}">
+        <div class="concept-header" onclick="toggleConcept('concept-${topicKey}-${i}')">
+          <div class="concept-title-wrap">
+            <span class="concept-num">${String(i+1).padStart(2,'0')}</span>
+            <span class="concept-name">${concept.title}</span>
+          </div>
+          <span class="concept-arrow">⌄</span>
+        </div>
+        <div class="concept-body">${concept.content}</div>
+      </div>
+    `;
+  });
+
+  // Quiz
+  const q = topic.quiz;
+  const optionsHtml = q.options.map((opt, i) =>
+    `<button class="quiz-option" onclick="checkAnswer(this, ${i}, ${q.answer}, '${topicKey}-quiz', '${q.explanation.replace(/'/g, "\\'")}')"> ${String.fromCharCode(65+i)}. ${opt}</button>`
+  ).join('');
+
+  html += `
+    <div class="quiz-block animate">
+      <div class="quiz-title">🎯 QUICK QUIZ — ${topic.title.toUpperCase()}</div>
+      <div class="quiz-question">${q.question}</div>
+      <div class="quiz-options" id="${topicKey}-quiz">${optionsHtml}</div>
+      <div class="quiz-result" id="${topicKey}-quiz-result"></div>
+    </div>
+  `;
+
+  document.getElementById('topicContent').innerHTML = html;
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-topic').classList.add('active');
+}
+
+function toggleConcept(id) {
+  const block = document.getElementById(id);
+  block.classList.toggle('open');
+}
+
+function checkAnswer(btn, selected, correct, quizId, explanation) {
+  const container = document.getElementById(quizId);
+  if (container.querySelector('.correct')) return;
+
+  const buttons = container.querySelectorAll('.quiz-option');
+  buttons.forEach((b, i) => {
+    b.style.pointerEvents = 'none';
+    if (i === correct) b.classList.add('correct');
+    else if (i === selected) b.classList.add('wrong');
+  });
+
+  const resultEl = document.getElementById(quizId + '-result');
+  if (selected === correct) {
+    resultEl.className = 'quiz-result show correct-result';
+    resultEl.textContent = '✅ Correct! ' + explanation;
+  } else {
+    resultEl.className = 'quiz-result show wrong-result';
+    resultEl.textContent = '❌ Not quite. ' + explanation;
+  }
+}
+
+function updateProgress() {
+  const total = Object.keys(topicsData).length;
+  const visited = visitedTopics.size;
+  const pct = Math.round((visited / total) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = `${visited} / ${total} topics visited`;
+}
+
+function handleSearch(query) {
+  if (!query || query.trim().length < 2) {
+    if (currentView === 'search') showView('home');
+    return;
+  }
+
+  const q = query.toLowerCase();
+  const results = searchIndex.filter(item =>
+    item.conceptTitle.toLowerCase().includes(q) ||
+    item.topicTitle.toLowerCase().includes(q) ||
+    item.snippet.toLowerCase().includes(q)
+  );
+
+  const listEl = document.getElementById('searchResultsList');
+  if (results.length === 0) {
+    listEl.innerHTML = '<p style="color:var(--text-light);padding:20px 0;">No results found. Try a different search term.</p>';
+  } else {
+    listEl.innerHTML = results.map(r => {
+      const snippet = r.snippet.substring(0, 150) + '...';
+      const highlighted = snippet.replace(new RegExp(query, 'gi'), m => `<mark>${m}</mark>`);
+      return `
+        <div class="search-result-item" onclick="showTopic('${r.topicKey}'); setTimeout(()=>{ const el = document.getElementById('concept-${r.topicKey}-${r.conceptIndex}'); if(el){ el.classList.add('open'); el.scrollIntoView({behavior:'smooth', block:'center'}); }}, 300);">
+          <div class="search-result-title">${r.topicIcon} ${r.conceptTitle}</div>
+          <div class="search-result-path">${r.topicTitle}</div>
+          <div class="search-result-snippet">${highlighted}</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  showView('search');
+  document.getElementById('topbarTitle').textContent = `Search: "${query}"`;
+  document.getElementById('topbarCrumb').textContent = `${results.length} result(s) found`;
+}
+</script>
+</body>
+</html>
